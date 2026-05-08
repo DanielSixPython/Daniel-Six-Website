@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Cart | danielsix.com</title>
-    <link rel="icon" href="data:,"> 
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a1a; color: #eee; display: flex; justify-content: center; padding: 40px; }
         #cart-card { background: #2a2a2a; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -27,9 +26,7 @@
 
 <div id="cart-card">
     <h2>Shopping Cart</h2>
-    <div id="cart-items-list">
-        <!-- Items will be injected here -->
-    </div>
+    <div id="cart-items-list"></div>
 
     <div class="actions">
         <button id="checkout-button">Proceed to Checkout</button>
@@ -46,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clear-button');
     const statusDiv = document.getElementById('status');
 
-    // 1. Get data from URL
     const urlParams = new URLSearchParams(window.location.search);
     const rawData = urlParams.get('data');
 
@@ -57,8 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 2. Parse and Display Items
-    // Format expected: Name:PriceID:Qty,Name2:PriceID2:Qty2
+    // Parse: Name:PriceID:Qty
     const items = rawData.split(',').map(itemStr => {
         const parts = itemStr.split(':');
         return {
@@ -80,23 +75,16 @@ document.addEventListener('DOMContentLoaded', () => {
         itemsList.appendChild(div);
     });
 
-   // 3. Clear Cart Logic
     clearBtn.onclick = () => {
-        // A. Wipe the browser's memory of the cart
-        localStorage.clear(); 
-        // Note: If you only want to clear the cart specifically, 
-        // use: localStorage.removeItem('your_cart_key_name');
-
-        // B. Redirect to the same page without the 'data' parameter
-        window.location.href = window.location.pathname;
+        localStorage.removeItem('parasol_cart'); 
+        window.location.href = 'parasol.html'; // Send them back to shop
     };
     
-    // 4. Checkout Logic
     checkoutBtn.onclick = async () => {
         try {
             checkoutBtn.disabled = true;
             checkoutBtn.innerText = "Connecting...";
-            statusDiv.innerText = "Setting up your secure payment...";
+            statusDiv.innerText = "Setting up secure payment...";
 
             const response = await fetch('/create-checkout-session', {
                 method: 'POST',
@@ -121,6 +109,5 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 });
 </script>
-
 </body>
 </html>
