@@ -123,34 +123,35 @@
     }
 
     // === SERVER-SIDE CHECKOUT ===
-    document.getElementById('checkout-btn').onclick = async function() {
-        const btn = this;
-        btn.textContent = "Redirecting to Stripe...";
-        btn.classList.add('loading');
+   // This replaces the onclick handler in your cart page
+document.getElementById('checkout-button').onclick = async () => {
+    try {
+        // 1. Prepare your cart data
+        // Ensure your cart is an array of objects: [{ priceId: 'abc', qty: 1 }]
+        const cartData = getCartData(); 
 
-        try {
-            const response = await fetch('/create-checkout-session', {   // ← Change this URL if needed
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cart: cart })
-            });
+        // 2. Call the server-side function
+        const response = await fetch('/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cart: cartData })
+        });
 
-            const data = await response.json();
-
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                alert("Error: No checkout URL received.");
-                btn.textContent = "Proceed to Checkout";
-                btn.classList.remove('loading');
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Failed to connect to checkout. Please try again.");
-            btn.textContent = "Proceed to Checkout";
-            btn.classList.remove('loading');
+        // 3. Check for server errors BEFORE parsing JSON
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: "Unknown server error" }));
+            throw new Error(errorData.error || `Server returned ${response.status}`);
         }
-    };
+
+        // 4. Redirect to Stripe
+        const { url } = await response.json();
+        window.location.href = url;
+
+    } catch (err) {
+        console.error("Checkout failed:", err);
+        alert(`Wait! The checkout hit a snag: ${err.message}`);
+    }
+};
 
     function clearCart() {
         if (confirm("Clear entire cart?")) {
