@@ -14,42 +14,42 @@
         if (!checkoutBtn) return;
 
         checkoutBtn.onclick = async () => {
-            console.log("Button clicked. Preparing cart data...");
+            console.log("Button clicked. Current URL:", window.location.href);
+            
             try {
                 checkoutBtn.disabled = true;
                 checkoutBtn.innerText = "Connecting...";
 
-                // 1. Get the data from the URL
+                // 1. Extract data from URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const dataStr = urlParams.get('data'); 
                 
                 if (!dataStr) {
-                    throw new Error("No cart data found in URL. Ensure the URL looks like: cart?data=Name:PriceID:Qty");
+                    throw new Error(`No 'data' parameter found. URL is: ${window.location.search}`);
                 }
 
-                // 2. Parse multi-item format (e.g. Parasol-18:price_123:1,Parasol-12:price_456:1)
+                // 2. Parse Items (Handles: Name:PriceID:Qty,Name:PriceID:Qty)
                 const cartData = dataStr.split(',').map(itemStr => {
                     const parts = itemStr.split(':');
-                    if (parts.length < 3) throw new Error("Invalid item format in URL");
+                    if (parts.length < 3) throw new Error(`Invalid item format: ${itemStr}`);
                     return {
                         priceId: parts[1].trim(),
                         qty: parseInt(parts[2]) || 1
                     };
                 });
 
-                console.log("Sending cart data:", cartData);
+                console.log("Cart data prepared:", cartData);
 
-                // 3. POST to the Cloudflare Function
+                // 3. POST to Cloudflare Function
                 const response = await fetch('/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cart: cartData })
                 });
 
-                // 4. Handle 404 or other errors
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`Server Error (Status ${response.status}). Details: ${errorText}`);
+                    throw new Error(`Server Error (${response.status}): ${errorText}`);
                 }
 
                 const result = await response.json();
