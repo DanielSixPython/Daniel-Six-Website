@@ -80,12 +80,17 @@ document.addEventListener('DOMContentLoaded', () => {
         itemsList.appendChild(div);
     });
 
-    // 3. Clear Cart Logic
+   // 3. Clear Cart Logic
     clearBtn.onclick = () => {
-        // Simply redirect to the same page without the 'data' parameter
+        // A. Wipe the browser's memory of the cart
+        localStorage.clear(); 
+        // Note: If you only want to clear the cart specifically, 
+        // use: localStorage.removeItem('your_cart_key_name');
+
+        // B. Redirect to the same page without the 'data' parameter
         window.location.href = window.location.pathname;
     };
-
+    
     // 4. Checkout Logic
     checkoutBtn.onclick = async () => {
         try {
