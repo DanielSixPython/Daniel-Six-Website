@@ -1,10 +1,10 @@
-import Stripe from 'stripe';
+// This import works without package.json and without a build step
+import Stripe from 'https://esm.sh/stripe@14.25.0?target=worker';
 
 export async function onRequestPost({ request, env }) {
     try {
-        // This variable MUST be named STRIPE_SECRET_KEY in Cloudflare Settings
         if (!env.STRIPE_SECRET_KEY) {
-            return new Response("Error: STRIPE_SECRET_KEY not set in Cloudflare", { status: 500 });
+            return new Response("API Key Missing", { status: 500 });
         }
 
         const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
