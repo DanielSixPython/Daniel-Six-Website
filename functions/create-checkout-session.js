@@ -9,30 +9,27 @@ export async function onRequestPost({ request, env }) {
         const body = await request.json();
         const { cart } = body;
 
-        const session = await stripe.checkout.sessions.create({
-            submit_type: 'pay',
-            billing_address_collection: 'auto',
-            shipping_address_collection: {
-                allowed_countries: ['US', 'CA'], 
-            },
-            line_items: cart.map(item => ({
-                price: item.priceId,
-                quantity: item.qty,
-                adjustable_quantity: {
-                    enabled: true,
-                    minimum: 1,
-                    maximum: 99,
-                },
-            })),
-            mode: 'payment',
-            success_url: `${new URL(request.url).origin}/success.html`,
-            cancel_url: `${new URL(request.url).origin}/cart.html`,
-        });
-
-        return new Response(JSON.stringify({ url: session.url }), {
-            headers: { "Content-Type": "application/json" }
-        });
-
+const session = await stripe.checkout.sessions.create({
+    submit_type: 'pay',
+    billing_address_collection: 'auto',
+    shipping_address_collection: {
+        allowed_countries: ['US', 'CA'],
+    },
+    // Add this section here:
+    shipping_options: [
+      {
+        shipping_rate: 'shr_YOUR_SHIPPING_RATE_ID_HERE', 
+      },
+    ],
+    line_items: cart.map(item => ({
+        price: item.priceId,
+        quantity: item.qty,
+    })),
+    mode: 'payment',
+    success_url: `${new URL(request.url).origin}/success.html`,
+    cancel_url: `${new URL(request.url).origin}/cart.html`,
+});
+        
     } catch (error) {
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
