@@ -3,28 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>Checkout | danielsix.com</title>
-    <!-- This stops the favicon 404 error in your logs -->
-    <link rel="icon" href="data:,">
+    <link rel="icon" href="data:,"> <!-- Stops the favicon 404 -->
 </head>
 <body>
-    <button id="checkout-button">Checkout Now</button>
+    <button id="checkout-button">Checkout</button>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const checkoutBtn = document.getElementById('checkout-button');
         
         checkoutBtn.onclick = async () => {
-            console.log("Checkout initiated...");
             try {
                 checkoutBtn.disabled = true;
                 checkoutBtn.innerText = "Connecting...";
 
                 const urlParams = new URLSearchParams(window.location.search);
                 const data = urlParams.get('data');
-                
-                if (!data) throw new Error("No cart data found in URL (?data=...)");
+                if (!data) throw new Error("No cart data found in URL.");
 
-                // Parse: Name:PriceID:Qty,Name:PriceID:Qty
+                // Parse Name:PriceID:Qty
                 const cartData = data.split(',').map(item => {
                     const parts = item.split(':');
                     return {
@@ -33,7 +30,6 @@
                     };
                 });
 
-                // Call the Cloudflare Function
                 const response = await fetch('/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -42,18 +38,17 @@
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`Server Error: ${errorText}`);
+                    throw new Error(errorText || "Server error");
                 }
 
                 const result = await response.json();
-                // Redirect to the Stripe Checkout page
                 window.location.href = result.url;
 
             } catch (err) {
                 console.error("Checkout failed:", err);
-                alert("Checkout Error: " + err.message);
+                alert("Error: " + err.message);
                 checkoutBtn.disabled = false;
-                checkoutBtn.innerText = "Checkout Now";
+                checkoutBtn.innerText = "Checkout";
             }
         };
     });
