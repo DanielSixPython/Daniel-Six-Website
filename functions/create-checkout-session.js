@@ -3,22 +3,30 @@ import Stripe from 'stripe';
 
 export async function onRequestPost({ request, env }) {
     try {
-        const { cart } = await request.json();
+        const body = await request.json();
+        const { cart } = body;
 
-        if (!cart || !Array.isArray(cart)) {
-            return new Response(JSON.stringify({ error: "Invalid cart" }), { 
+        if (!cart || !Array.isArray(cart) || cart.length === 0) {
+            return new Response(JSON.stringify({ error: "Cart is empty" }), { 
                 status: 400,
                 headers: { "Content-Type": "application/json" }
             });
         }
 
+        if (!env.STRIPE_SECRET_KEY) {
+            return new Response(JSON.stringify({ error: "Stripe key not configured" }), { 
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
         const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-            httpClient: Stripe.createFetchHttpClient()   // Important for Cloudflare
+            httpClient: Stripe.createFetchHttpClient()
         });
 
         const lineItems = cart.map(item => ({
             price: item.priceId,
-            quantity: item.qty,
+            quantity: parseInt(item.qty) || 1,
         }));
 
         const session = await stripe.checkout.sessions.create({
@@ -26,9 +34,6 @@ export async function onRequestPost({ request, env }) {
             mode: 'payment',
             success_url: `${new URL(request.url).origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${new URL(request.url).origin}/cart.html`,
-            
-            // Optional improvements
-            // shipping_address_collection: { allowed_countries: ['US'] },
         });
 
         return new Response(JSON.stringify({ url: session.url }), {
@@ -38,7 +43,7 @@ export async function onRequestPost({ request, env }) {
     } catch (error) {
         console.error(error);
         return new Response(JSON.stringify({ 
-            error: "Failed to create checkout session" 
+            error: "Internal server error" 
         }), { 
             status: 500,
             headers: { "Content-Type": "application/json" }
