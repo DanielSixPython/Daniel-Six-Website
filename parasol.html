@@ -134,12 +134,12 @@
         localStorage.setItem('parasol_cart', JSON.stringify(cart));
     }
 
+    // Updates the URL of the "Cart" link in the menu to include the current data
     function updateCartLink() {
         var cartLink = document.getElementById('nav-cart-link');
         if (!cartLink) return;
         var cart = loadCart();
         if (cart.length > 0) {
-            // Encode the cart data into the URL
             var cartString = cart.map(function(i) {
                 return i.name + ':' + i.priceId + ':' + i.qty;
             }).join(',');
@@ -149,6 +149,7 @@
         }
     }
 
+    // Visual feedback: shows "In Cart (x)" on the buttons
     function highlightCartItems() {
         var cart = loadCart();
         cart.forEach(function(item) {
