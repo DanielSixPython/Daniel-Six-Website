@@ -118,83 +118,69 @@
         <div id="contact" class="page-section" style="height: 300px;"></div>
     </div>
 
-    <script>
-        window.onload = function() {
-            updateCartLink();
-            highlightCartItems();
-        };
+// ... existing styles ...
 
-        function loadCart() {
-            var saved = localStorage.getItem('parasol_cart');
-            if (!saved) return [];
-            try {
-                var raw = JSON.parse(saved);
-                // Normalize both old format (productId/quantity) and new format (name/qty)
-                return raw.map(function(i) {
-                    return {
-                        name:    i.name    || i.productId,
-                        priceId: i.priceId || '',
-                        qty:     i.qty     || i.quantity || 1
-                    };
-                });
-            } catch(e) { return []; }
+<script>
+    window.onload = function() {
+        updateCartLink();
+        highlightCartItems();
+    };
+
+    function loadCart() {
+        var saved = localStorage.getItem('parasol_cart');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    function saveCart(cart) {
+        localStorage.setItem('parasol_cart', JSON.stringify(cart));
+    }
+
+    function updateCartLink() {
+        var cartLink = document.getElementById('nav-cart-link');
+        if (!cartLink) return;
+        var cart = loadCart();
+        if (cart.length > 0) {
+            // Encode the cart data into the URL
+            var cartString = cart.map(function(i) {
+                return i.name + ':' + i.priceId + ':' + i.qty;
+            }).join(',');
+            cartLink.href = 'cart.html?data=' + encodeURIComponent(cartString);
+        } else {
+            cartLink.href = 'cart.html';
         }
+    }
 
-        function saveCart(cart) {
-            localStorage.setItem('parasol_cart', JSON.stringify(cart));
-        }
-
-        function updateCartLink() {
-            var cartLink = document.getElementById('nav-cart-link');
-            if (!cartLink) return;
-            var cart = loadCart();
-            if (cart.length > 0) {
-                var cartString = cart.map(function(i) {
-                    return i.name + ':' + i.priceId + ':' + i.qty;
-                }).join(',');
-                cartLink.href = 'cart.html?data=' + encodeURIComponent(cartString);
-            } else {
-                cartLink.href = 'cart.html';
+    function highlightCartItems() {
+        var cart = loadCart();
+        cart.forEach(function(item) {
+            var btn = document.getElementById('btn-' + item.name);
+            if (btn) {
+                btn.textContent = 'In Cart (' + item.qty + ')';
+                btn.classList.add('added');
             }
+        });
+    }
+
+    function addToCart(productName, priceId, btnEl) {
+        var input = document.getElementById('qty-' + productName);
+        var quantity = input ? (parseInt(input.value) || 1) : 1;
+        var cart = loadCart();
+        
+        var existing = cart.find(i => i.name === productName);
+        if (existing) {
+            existing.qty += quantity;
+        } else {
+            cart.push({ name: productName, priceId: priceId, qty: quantity });
         }
 
-        function highlightCartItems() {
-            var cart = loadCart();
-            cart.forEach(function(item) {
-                var btn = document.getElementById('btn-' + item.name);
-                if (btn) {
-                    btn.textContent = 'In Cart (' + item.qty + ')';
-                    btn.classList.add('added');
-                }
-            });
+        saveCart(cart);
+        updateCartLink();
+
+        if (btnEl) {
+            btnEl.textContent = 'In Cart (' + (existing ? existing.qty : quantity) + ')';
+            btnEl.classList.add('added');
         }
-
-        function addToCart(productName, priceId, btnEl) {
-            var input = document.getElementById('qty-' + productName);
-            var quantity = input ? (parseInt(input.value) || 1) : 1;
-
-            var cart = loadCart();
-            var existing = null;
-            for (var i = 0; i < cart.length; i++) {
-                if (cart[i].name === productName) { existing = cart[i]; break; }
-            }
-
-            if (existing) {
-                existing.qty += quantity;
-                existing.priceId = priceId;
-            } else {
-                cart.push({ name: productName, priceId: priceId, qty: quantity });
-            }
-
-            saveCart(cart);
-            updateCartLink();
-
-            var newQty = existing ? existing.qty : quantity;
-            if (btnEl) {
-                btnEl.textContent = 'In Cart (' + newQty + ')';
-                btnEl.classList.add('added');
-            }
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
