@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Cart | danielsix.com</title>
-    <link rel="icon" href="data:,"> <!-- Kills the favicon 404 error -->
+    <title>Checkout | danielsix.com</title>
+    <!-- This stops the favicon 404 error in your logs -->
+    <link rel="icon" href="data:,">
 </head>
 <body>
-    <h1>Your Cart</h1>
     <button id="checkout-button">Checkout Now</button>
 
     <script>
@@ -14,13 +14,15 @@
         const checkoutBtn = document.getElementById('checkout-button');
         
         checkoutBtn.onclick = async () => {
+            console.log("Checkout initiated...");
             try {
                 checkoutBtn.disabled = true;
                 checkoutBtn.innerText = "Connecting...";
 
                 const urlParams = new URLSearchParams(window.location.search);
                 const data = urlParams.get('data');
-                if (!data) throw new Error("No cart data found in URL.");
+                
+                if (!data) throw new Error("No cart data found in URL (?data=...)");
 
                 // Parse: Name:PriceID:Qty,Name:PriceID:Qty
                 const cartData = data.split(',').map(item => {
@@ -31,6 +33,7 @@
                     };
                 });
 
+                // Call the Cloudflare Function
                 const response = await fetch('/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -39,15 +42,16 @@
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(errorText);
+                    throw new Error(`Server Error: ${errorText}`);
                 }
 
                 const result = await response.json();
+                // Redirect to the Stripe Checkout page
                 window.location.href = result.url;
 
             } catch (err) {
                 console.error("Checkout failed:", err);
-                alert("Error: " + err.message);
+                alert("Checkout Error: " + err.message);
                 checkoutBtn.disabled = false;
                 checkoutBtn.innerText = "Checkout Now";
             }
