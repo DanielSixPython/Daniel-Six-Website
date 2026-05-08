@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clear-button');
     const statusDiv = document.getElementById('status');
 
-    // 1. Get data from URL
     const urlParams = new URLSearchParams(window.location.search);
     const rawData = urlParams.get('data');
 
@@ -54,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 2. Parse and Display Items (Format: Name:PriceID:Qty)
     const items = rawData.split(',').map(itemStr => {
         const parts = itemStr.split(':');
         return {
@@ -76,13 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
         itemsList.appendChild(div);
     });
 
-    // 3. Clear Cart Logic
     clearBtn.onclick = () => {
         localStorage.removeItem('parasol_cart'); 
         window.location.href = 'parasol.html'; 
     };
     
-    // 4. Checkout Logic
     checkoutBtn.onclick = async () => {
         try {
             checkoutBtn.disabled = true;
@@ -96,6 +92,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     cart: items.map(i => ({ priceId: i.priceId, qty: i.qty })) 
                 })
             });
+
+            // If the server sends HTML instead of JSON, this catch block will handle it
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                console.error("Server Response:", text);
+                throw new Error("Server did not return JSON. Check worker logs.");
+            }
 
             const result = await response.json();
             if (result.url) {
