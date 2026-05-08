@@ -2,89 +2,72 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cart | danielsix.com</title>
-    <!-- Your existing CSS link here -->
+    <title>Cart - danielsix.com</title>
 </head>
 <body>
-    <!-- Your existing Header/Nav here -->
 
-    <main>
-        <h1>Your Cart</h1>
-        <div id="cart-container">
-            <!-- Your cart items display here -->
-        </div>
-
-        <!-- THIS BUTTON ID IS CRITICAL -->
-        <button id="checkout-button">Checkout</button>
-    </main>
+    <button id="checkout-button">Checkout</button>
 
     <script>
-    /**
-     * THE FIX: We wrap everything in DOMContentLoaded to prevent the 'null' error.
-     * We also check response.ok to prevent the 'Unexpected end of JSON' error.
-     */
     document.addEventListener('DOMContentLoaded', () => {
         const checkoutBtn = document.getElementById('checkout-button');
 
         if (!checkoutBtn) {
-            console.error("Critical: #checkout-button not found in the HTML.");
+            console.error("Button with ID 'checkout-button' not found.");
             return;
         }
 
         checkoutBtn.onclick = async () => {
             try {
-                // UI Feedback
                 checkoutBtn.disabled = true;
-                checkoutBtn.innerText = "Connecting to Stripe...";
+                checkoutBtn.innerText = "Connecting...";
 
-                // 1. Parse the cart data from your URL
+                // 1. Get the data from the URL ?data=Name:PriceID:Qty
                 const urlParams = new URLSearchParams(window.location.search);
-                const dataStr = urlParams.get('data'); 
+                const rawData = urlParams.get('data'); 
                 
-                if (!dataStr) {
-                    alert("Your cart is empty.");
-                    checkoutBtn.disabled = false;
-                    checkoutBtn.innerText = "Checkout";
-                    return;
+                if (!rawData) {
+                    throw new Error("No cart data found in the URL.");
                 }
 
-                // Format: Name:PriceID:Qty (e.g., Parasol-18:price_1TU...:1)
-                const parts = dataStr.split(':');
+                // 2. Parse your specific format: Parasol-18:price_1TUd8FCkSiGjt6yM1CgAgJAP:1
+                const parts = rawData.split(':');
+                if (parts.length < 3) {
+                    throw new Error("Cart data format is invalid.");
+                }
+
                 const cartData = [{
-                    priceId: parts[1],
+                    priceId: parts[1], // The middle part is your Stripe Price ID
                     qty: parseInt(parts[2]) || 1
                 }];
 
-                // 2. Call the Cloudflare Function
+                // 3. POST to your Cloudflare Function
                 const response = await fetch('/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cart: cartData })
                 });
 
-                // 3. Robust Error Handling
+                // 4. Handle 404 or 500 errors properly
                 if (!response.ok) {
                     const errorText = await response.text();
-                    let msg = "Server Error";
+                    let errorMessage = "Server Error";
                     try {
                         const json = JSON.parse(errorText);
-                        msg = json.error || msg;
+                        errorMessage = json.error || errorMessage;
                     } catch (e) {
-                        msg = errorText; // Use raw text if not JSON (prevents SyntaxError)
+                        errorMessage = errorText; 
                     }
-                    throw new Error(msg);
+                    throw new Error(errorMessage);
                 }
 
-                // 4. Redirect to Stripe
-                const session = await response.json();
-                window.location.href = session.url;
+                // 5. Redirect to Stripe Checkout
+                const result = await response.json();
+                window.location.href = result.url;
 
             } catch (err) {
                 console.error("Checkout failed:", err);
                 alert("Checkout Error: " + err.message);
-                
-                // Reset button
                 checkoutBtn.disabled = false;
                 checkoutBtn.innerText = "Checkout";
             }
