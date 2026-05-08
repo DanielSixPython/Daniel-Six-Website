@@ -17,25 +17,27 @@
             console.log("Button clicked. Preparing cart data...");
             try {
                 checkoutBtn.disabled = true;
-                checkoutBtn.innerText = "Connecting to Stripe...";
+                checkoutBtn.innerText = "Connecting...";
 
                 // 1. Get the data from the URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const dataStr = urlParams.get('data'); 
                 
-                if (!dataStr) throw new Error("No cart data found in URL.");
+                if (!dataStr) {
+                    throw new Error("No cart data found in URL. Ensure the URL looks like: cart?data=Name:PriceID:Qty");
+                }
 
-                // 2. Parse multi-item format (handles commas for multiple products)
-                // Format expected: Name:PriceID:Qty,Name:PriceID:Qty
+                // 2. Parse multi-item format (e.g. Parasol-18:price_123:1,Parasol-12:price_456:1)
                 const cartData = dataStr.split(',').map(itemStr => {
                     const parts = itemStr.split(':');
+                    if (parts.length < 3) throw new Error("Invalid item format in URL");
                     return {
                         priceId: parts[1].trim(),
                         qty: parseInt(parts[2]) || 1
                     };
                 });
 
-                console.log("Sending cart data to server:", cartData);
+                console.log("Sending cart data:", cartData);
 
                 // 3. POST to the Cloudflare Function
                 const response = await fetch('/create-checkout-session', {
@@ -44,15 +46,13 @@
                     body: JSON.stringify({ cart: cartData })
                 });
 
-                // 4. Check for 404 or other errors
+                // 4. Handle 404 or other errors
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`Server returned 404/500. Ensure /functions folder exists. Details: ${errorText}`);
+                    throw new Error(`Server Error (Status ${response.status}). Details: ${errorText}`);
                 }
 
-                // 5. Redirect to Stripe
                 const result = await response.json();
-                console.log("Redirecting to:", result.url);
                 window.location.href = result.url;
 
             } catch (err) {
