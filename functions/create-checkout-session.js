@@ -18,7 +18,7 @@ const session = await stripe.checkout.sessions.create({
     // Add this section here:
     shipping_options: [
       {
-        shipping_rate: 'shr_YOUR_SHIPPING_RATE_ID_HERE', 
+        shipping_rate: 'shr_1TUdFECkSiGjt6yMZniIyG4X', 
       },
     ],
     line_items: cart.map(item => ({
