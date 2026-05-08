@@ -3,15 +3,14 @@ import Stripe from 'https://esm.sh/stripe@14.25.0?target=deno';
 export async function onRequestPost({ request, env }) {
     try {
         if (!env.STRIPE_SECRET_KEY) {
-            return new Response("Missing STRIPE_SECRET_KEY", { status: 500 });
+            return new Response("API Key Missing in Settings", { status: 500 });
         }
 
         const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
             httpClient: Stripe.createFetchHttpClient(),
         });
 
-        const body = await request.json();
-        const { cart } = body;
+        const { cart } = await request.json();
 
         const session = await stripe.checkout.sessions.create({
             line_items: cart.map(item => ({
