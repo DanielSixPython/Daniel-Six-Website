@@ -2,48 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Checkout | danielsix.com</title>
+    <title>Cart | danielsix.com</title>
+    <link rel="icon" href="data:,"> <!-- Kills the favicon 404 error -->
 </head>
 <body>
-    <button id="checkout-button">Checkout</button>
+    <h1>Your Cart</h1>
+    <button id="checkout-button">Checkout Now</button>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         const checkoutBtn = document.getElementById('checkout-button');
-        if (!checkoutBtn) return;
-
+        
         checkoutBtn.onclick = async () => {
             try {
                 checkoutBtn.disabled = true;
                 checkoutBtn.innerText = "Connecting...";
 
-                // 1. Get data from URL
                 const urlParams = new URLSearchParams(window.location.search);
-                const data = urlParams.get('data'); 
+                const data = urlParams.get('data');
                 if (!data) throw new Error("No cart data found in URL.");
 
-                // 2. Parse Items (handles Name:PriceID:Qty,Name:PriceID:Qty)
-                const cartData = data.split(',').map(itemStr => {
-                    const parts = itemStr.split(':');
-                    if (parts.length < 3) throw new Error("Malformed cart item.");
+                // Parse: Name:PriceID:Qty,Name:PriceID:Qty
+                const cartData = data.split(',').map(item => {
+                    const parts = item.split(':');
                     return {
                         priceId: parts[1].trim(),
                         qty: parseInt(parts[2]) || 1
                     };
                 });
 
-                // 3. POST to Server
-                // Note: Even though the file is in /functions/, you call it via /create-checkout-session
                 const response = await fetch('/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cart: cartData })
                 });
 
-                // 4. Handle 404/500 Errors
                 if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(`Server Error (${response.status}): ${errText}`);
+                    const errorText = await response.text();
+                    throw new Error(errorText);
                 }
 
                 const result = await response.json();
@@ -51,9 +47,9 @@
 
             } catch (err) {
                 console.error("Checkout failed:", err);
-                alert("Checkout Error: " + err.message);
+                alert("Error: " + err.message);
                 checkoutBtn.disabled = false;
-                checkoutBtn.innerText = "Checkout";
+                checkoutBtn.innerText = "Checkout Now";
             }
         };
     });
