@@ -2,7 +2,7 @@ import Stripe from 'https://esm.sh/stripe@14.25.0?target=deno';
 
 export async function onRequestPost({ request, env }) {
     try {
-        // 1. Check for Environment Variable
+        // 1. Check for the Secret Key in Cloudflare Environment Variables
         if (!env.STRIPE_SECRET_KEY) {
             return new Response(JSON.stringify({ error: "Missing STRIPE_SECRET_KEY in Cloudflare Settings." }), { 
                 status: 500, 
@@ -10,12 +10,12 @@ export async function onRequestPost({ request, env }) {
             });
         }
 
-        // 2. Initialize Stripe with Fetch for Workers
+        // 2. Initialize Stripe with the standard Fetch client for Workers
         const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
             httpClient: Stripe.createFetchHttpClient(),
         });
 
-        // 3. Parse Body
+        // 3. Parse the cart data from the frontend
         const body = await request.json();
         const { cart } = body;
 
@@ -23,7 +23,7 @@ export async function onRequestPost({ request, env }) {
             return new Response(JSON.stringify({ error: "Invalid cart data." }), { status: 400 });
         }
 
-        // 4. Create Session
+        // 4. Create the Checkout Session
         const session = await stripe.checkout.sessions.create({
             line_items: cart.map(item => ({
                 price: item.priceId,
@@ -34,6 +34,7 @@ export async function onRequestPost({ request, env }) {
             cancel_url: `${new URL(request.url).origin}/cart.html`,
         });
 
+        // 5. Return the URL for redirect
         return new Response(JSON.stringify({ url: session.url }), {
             headers: { "Content-Type": "application/json" }
         });
