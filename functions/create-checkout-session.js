@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 export async function onRequestPost({ request, env }) {
     try {
         if (!env.STRIPE_SECRET_KEY) {
-            return new Response(JSON.stringify({ error: "Missing STRIPE_SECRET_KEY in Cloudflare." }), { 
+            return new Response(JSON.stringify({ error: "STRIPE_SECRET_KEY not set in Cloudflare." }), { 
                 status: 500, 
                 headers: { "Content-Type": "application/json" } 
             });
@@ -13,7 +13,7 @@ export async function onRequestPost({ request, env }) {
         const { cart } = body;
 
         if (!cart || !Array.isArray(cart) || cart.length === 0) {
-            return new Response(JSON.stringify({ error: "Cart is empty." }), { status: 400 });
+            return new Response(JSON.stringify({ error: "Received empty cart." }), { status: 400 });
         }
 
         const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
