@@ -1,14 +1,12 @@
-// We remove the https://esm.sh prefix and use a standard import. 
-// Cloudflare will attempt to resolve this during the "Compiling" phase.
 import Stripe from 'stripe';
 
 export async function onRequestPost({ request, env }) {
     try {
+        // This variable MUST be named STRIPE_SECRET_KEY in Cloudflare Settings
         if (!env.STRIPE_SECRET_KEY) {
-            return new Response("Missing STRIPE_SECRET_KEY", { status: 500 });
+            return new Response("Error: STRIPE_SECRET_KEY not set in Cloudflare", { status: 500 });
         }
 
-        // Initialize Stripe using the global fetch compatible with Cloudflare
         const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
             httpClient: Stripe.createFetchHttpClient(),
         });
