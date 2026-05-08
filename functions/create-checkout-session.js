@@ -1,10 +1,9 @@
+import Stripe from 'stripe';
+
 export async function onRequestPost({ request, env }) {
     try {
-        // 1. Dynamic Import: This bypasses the Cloudflare Build Error
-        const { default: Stripe } = await import('https://esm.sh/stripe@14.25.0?target=worker');
-
         if (!env.STRIPE_SECRET_KEY) {
-            return new Response("API Key Missing in Cloudflare Settings", { status: 500 });
+            return new Response(JSON.stringify({ error: "API Key Missing" }), { status: 500 });
         }
 
         const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
@@ -29,9 +28,6 @@ export async function onRequestPost({ request, env }) {
         });
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), { 
-            status: 500,
-            headers: { "Content-Type": "application/json" }
-        });
+        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 }
