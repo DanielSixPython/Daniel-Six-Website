@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 export async function onRequestPost({ request, env }) {
     try {
         if (!env.STRIPE_SECRET_KEY) {
-            return new Response(JSON.stringify({ error: "Stripe Secret Key missing in Cloudflare Environment Variables." }), { 
+            return new Response(JSON.stringify({ error: "Missing STRIPE_SECRET_KEY in Cloudflare." }), { 
                 status: 500, 
                 headers: { "Content-Type": "application/json" } 
             });
