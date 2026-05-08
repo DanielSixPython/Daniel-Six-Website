@@ -2,163 +2,94 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Daniel Six | Checkout</title>
-    <style>
-        body { 
-            margin: 0; 
-            padding: 20px; 
-            background: #fcfdfd; 
-            font-family: sans-serif; 
-            display: flex; 
-            justify-content: center; 
-        }
-        .container { 
-            width: 100%; 
-            max-width: 500px; 
-            border: 1px solid #cfd8dc; 
-            padding: 30px; 
-            background: white; 
-            border-radius: 8px; 
-        }
-        h2 { 
-            color: #2e7d32; 
-            border-bottom: 2px solid #2e7d32; 
-            padding-bottom: 10px; 
-        }
-        .item { 
-            display: flex; 
-            justify-content: space-between; 
-            padding: 12px 0; 
-            border-bottom: 1px solid #eee; 
-        }
-        .btn { 
-            width: 100%; 
-            padding: 18px; 
-            margin-top: 20px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            border-radius: 4px; 
-            font-size: 1.1rem; 
-        }
-        .btn-pay { 
-            background: #2e7d32; 
-            color: white; 
-            border: none; 
-        }
-        .btn-clear { 
-            background: white; 
-            border: 1px solid #ccc; 
-            color: #666; 
-            font-size: 0.95rem; 
-        }
-        .loading { opacity: 0.6; pointer-events: none; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart | danielsix.com</title>
+    <!-- Your existing CSS link here -->
 </head>
 <body>
-<div class="container">
-    <h2>Your Cart</h2>
-    <div id="cart-list">Loading...</div>
-    
-    <div id="actions" style="display:none;">
-        <button id="checkout-btn" class="btn btn-pay">Proceed to Checkout</button>
-        <button class="btn btn-clear" onclick="clearCart()">Clear Cart</button>
-    </div>
-</div>
+    <!-- Your existing Header/Nav here -->
 
-<script>
-    let cart = [];
+    <main>
+        <h1>Your Cart</h1>
+        <div id="cart-container">
+            <!-- Your cart items display here -->
+        </div>
 
-    window.onload = function() {
-        loadCart();
-        render();
-    };
+        <!-- THIS BUTTON ID IS CRITICAL -->
+        <button id="checkout-button">Checkout</button>
+    </main>
 
-    function loadCart() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const data = urlParams.get('data');
+    <script>
+    /**
+     * THE FIX: We wrap everything in DOMContentLoaded to prevent the 'null' error.
+     * We also check response.ok to prevent the 'Unexpected end of JSON' error.
+     */
+    document.addEventListener('DOMContentLoaded', () => {
+        const checkoutBtn = document.getElementById('checkout-button');
 
-        if (data) {
-            // Coming from product page via URL
-            cart = data.split(',').map(s => {
-                const p = s.split(':');
-                return { 
-                    name: p[0].trim(), 
-                    priceId: p[1] || '', 
-                    qty: parseInt(p[2]) || 1 
-                };
-            });
-            // Save to localStorage for consistency
-            localStorage.setItem('parasol_cart', JSON.stringify(cart));
-        } else {
-            // Load from localStorage
-            const saved = localStorage.getItem('parasol_cart');
-            if (saved) {
-                cart = JSON.parse(saved).map(i => ({
-                    name: i.name || i.productId,
-                    priceId: i.priceId || '',
-                    qty: i.qty || i.quantity || 1
-                }));
-            }
-        }
-    }
-
-    function render() {
-        const list = document.getElementById('cart-list');
-        const actions = document.getElementById('actions');
-
-        if (cart.length === 0) {
-            list.innerHTML = "<p>Your cart is empty.</p>";
-            actions.style.display = "none";
+        if (!checkoutBtn) {
+            console.error("Critical: #checkout-button not found in the HTML.");
             return;
         }
 
-        list.innerHTML = cart.map(item => `
-            <div class="item">
-                <span>${item.name}</span>
-                <span>Qty: ${item.qty}</span>
-            </div>
-        `).join('');
+        checkoutBtn.onclick = async () => {
+            try {
+                // UI Feedback
+                checkoutBtn.disabled = true;
+                checkoutBtn.innerText = "Connecting to Stripe...";
 
-        actions.style.display = "block";
-    }
+                // 1. Parse the cart data from your URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const dataStr = urlParams.get('data'); 
+                
+                if (!dataStr) {
+                    alert("Your cart is empty.");
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.innerText = "Checkout";
+                    return;
+                }
 
-    // === SERVER-SIDE CHECKOUT ===
-   // This replaces the onclick handler in your cart page
-document.getElementById('checkout-button').onclick = async () => {
-    try {
-        // 1. Prepare your cart data
-        // Ensure your cart is an array of objects: [{ priceId: 'abc', qty: 1 }]
-        const cartData = getCartData(); 
+                // Format: Name:PriceID:Qty (e.g., Parasol-18:price_1TU...:1)
+                const parts = dataStr.split(':');
+                const cartData = [{
+                    priceId: parts[1],
+                    qty: parseInt(parts[2]) || 1
+                }];
 
-        // 2. Call the server-side function
-        const response = await fetch('/create-checkout-session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cart: cartData })
-        });
+                // 2. Call the Cloudflare Function
+                const response = await fetch('/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cart: cartData })
+                });
 
-        // 3. Check for server errors BEFORE parsing JSON
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: "Unknown server error" }));
-            throw new Error(errorData.error || `Server returned ${response.status}`);
-        }
+                // 3. Robust Error Handling
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    let msg = "Server Error";
+                    try {
+                        const json = JSON.parse(errorText);
+                        msg = json.error || msg;
+                    } catch (e) {
+                        msg = errorText; // Use raw text if not JSON (prevents SyntaxError)
+                    }
+                    throw new Error(msg);
+                }
 
-        // 4. Redirect to Stripe
-        const { url } = await response.json();
-        window.location.href = url;
+                // 4. Redirect to Stripe
+                const session = await response.json();
+                window.location.href = session.url;
 
-    } catch (err) {
-        console.error("Checkout failed:", err);
-        alert(`Wait! The checkout hit a snag: ${err.message}`);
-    }
-};
-
-    function clearCart() {
-        if (confirm("Clear entire cart?")) {
-            localStorage.removeItem('parasol_cart');
-            window.location.href = 'cart.html';
-        }
-    }
-</script>
+            } catch (err) {
+                console.error("Checkout failed:", err);
+                alert("Checkout Error: " + err.message);
+                
+                // Reset button
+                checkoutBtn.disabled = false;
+                checkoutBtn.innerText = "Checkout";
+            }
+        };
+    });
+    </script>
 </body>
 </html>
