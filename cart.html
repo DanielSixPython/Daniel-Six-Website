@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBtn = document.getElementById('clear-button');
     const statusDiv = document.getElementById('status');
 
+    // 1. Get data from URL
     const urlParams = new URLSearchParams(window.location.search);
     const rawData = urlParams.get('data');
 
@@ -53,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Parse: Name:PriceID:Qty
+    // 2. Parse and Display Items (Format: Name:PriceID:Qty)
     const items = rawData.split(',').map(itemStr => {
         const parts = itemStr.split(':');
         return {
@@ -75,16 +76,18 @@ document.addEventListener('DOMContentLoaded', () => {
         itemsList.appendChild(div);
     });
 
+    // 3. Clear Cart Logic
     clearBtn.onclick = () => {
         localStorage.removeItem('parasol_cart'); 
-        window.location.href = 'parasol.html'; // Send them back to shop
+        window.location.href = 'parasol.html'; 
     };
     
+    // 4. Checkout Logic
     checkoutBtn.onclick = async () => {
         try {
             checkoutBtn.disabled = true;
             checkoutBtn.innerText = "Connecting...";
-            statusDiv.innerText = "Setting up secure payment...";
+            statusDiv.innerText = "Setting up your secure payment...";
 
             const response = await fetch('/create-checkout-session', {
                 method: 'POST',
