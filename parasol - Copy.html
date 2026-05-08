@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daniel Six: Parasol Irrigator</title>
+
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+    <style>
+        body { margin: 3px; background-color: #fcfdfd; font-family: sans-serif; display: flex; justify-content: center; }
+        .table-container { width: 100%; max-width: 720px; height: 100dvh; overflow-y: auto; border: 1px solid #cfd8dc; position: relative; padding: 0; }
+        .menu-wrapper { position: sticky; top: 0px; z-index: 20; width: 100%; aspect-ratio: 1920/425; background-color: #fff; }
+        .menu-wrapper img { width: 100%; display: block; }
+        .menu-link { position: absolute; display: block; cursor: pointer; }
+        .row-1 { top: 0%; height: 55%; }
+        .row-2 { top: 55%; height: 45%; }
+        .page-section { width: 100%; display: block; margin-bottom: 100px; scroll-margin-top: 160px; }
+        .parasol { width: 100%; display: block; }
+        .comparison-section { width: 100%; display: block; position: relative; }
+        .sticky-header { position: sticky; top: calc(100% / 8.6); z-index: 10; width: 100%; height: auto; display: block; }
+        .cart-controls { display: flex; align-items: center; justify-content: center; gap: 15px; padding: 20px 0; background: #f1f1f1; border-radius: 8px; margin: 10px 20px; }
+        .qty-input { width: 50px; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center; font-size: 1.1rem; }
+        .add-btn { padding: 10px 20px; background-color: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.3s; }
+        .add-btn:hover { background-color: #1b5e20; }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body>
+
+    <div class="table-container">
+        <div class="menu-wrapper">
+            <img src="Parasol.menu.webp" alt="Main Menu">
+            <a href="index.html" class="menu-link row-1" style="left: 0%; width: 12%;"></a>
+            <a href="parasol.html" class="menu-link row-1" style="left: 12%; width: 21%;"></a>
+            <a href="trimwand.html" class="menu-link row-1" style="left: 33%; width: 21%;"></a>
+            <a href="moonbeam.html" class="menu-link row-1" style="left: 54%; width: 22%;"></a>
+            <a href="other.html" class="menu-link row-1" style="left: 76%; width: 13%;"></a>
+            <a href="cart.html" id="nav-cart-link" class="menu-link row-1" style="left: 89%; width: 11%;"></a>
+            
+            <a href="index.html" class="menu-link row-2" style="left: 0%; width: 12%;"></a>
+            <a href="parasol.html" class="menu-link row-2" style="left: 12%; width: 19%;"></a>
+            <a href="#products" class="menu-link row-2" style="left: 31%; width: 20%;"></a>
+            <a href="#process" class="menu-link row-2" style="left: 51%; width: 17.5%;"></a>
+            <a href="#compare" class="menu-link row-2" style="left: 68.5%; width: 18%;"></a>
+            <a href="#terms" class="menu-link row-2" style="left: 86.5%; width: 13.5%;"></a>
+        </div>
+
+        <div id="overview" class="page-section">
+            <img src="Parasol.section.title.overview.webp" alt="Parasol Overview" class="parasol">
+            <img src="Parasol.overview.webp" alt="Parasol Overview" class="parasol">
+        </div>
+        
+        <div id="products" class="page-section">
+            <img src="Parasol.section.title.products.webp" alt="Parasol Products" class="parasol">
+            
+            <img src="Parasol.18.webp" alt="Parasol-18" class="parasol">
+            <div class="cart-controls">
+                <label>Qty:</label>
+                <input type="number" class="qty-input" id="qty-Parasol-18" value="1" min="1">
+                <button class="add-btn" onclick="addToCart('Parasol-18', 'price_1TUd8FCkSiGjt6yM1CgAgJAP')">Add to Cart</button>
+            </div>
+            <img src="Parasol.divider.webp" alt="Parasol divider" class="parasol">
+
+            <img src="Parasol.12.webp" alt="Parasol-12" class="parasol">
+            <div class="cart-controls">
+                <label>Qty:</label>
+                <input type="number" class="qty-input" id="qty-Parasol-12" value="1" min="1">
+                <button class="add-btn" onclick="addToCart('Parasol-12', 'price_1TUdAfCkSiGjt6yMlh4attuu')">Add to Cart</button>
+            </div>
+            <img src="Parasol.divider.webp" alt="Parasol divider" class="parasol">
+
+            <img src="Parasol.6.webp" alt="Parasol-6" class="parasol">
+            <div class="cart-controls">
+                <label>Qty:</label>
+                <input type="number" class="qty-input" id="qty-Parasol-6" value="1" min="1">
+                <button class="add-btn" onclick="addToCart('Parasol-6', 'price_1TUdBKCkSiGjt6yMfZGBM7gq')">Add to Cart</button>
+            </div>
+            <img src="Parasol.divider.webp" alt="Parasol divider" class="parasol">
+
+            <img src="Parasol.6L.webp" alt="Parasol-6L" class="parasol">
+            <div class="cart-controls">
+                <label>Qty:</label>
+                <input type="number" class="qty-input" id="qty-Parasol-6L" value="1" min="1">
+                <button class="add-btn" onclick="addToCart('Parasol-6L', 'price_1TUdCwCkSiGjt6yMXr3KL8iP')">Add to Cart</button>
+            </div>
+            <img src="Parasol.divider.webp" alt="Parasol divider" class="parasol">
+
+            <img src="Parasol.3.webp" alt="Parasol-3" class="parasol">
+            <div class="cart-controls">
+                <label>Qty:</label>
+                <input type="number" class="qty-input" id="qty-Parasol-3" value="1" min="1">
+                <button class="add-btn" onclick="addToCart('Parasol-3', 'price_1TUdDTCkSiGjt6yM2FN6KpLq')">Add to Cart</button>
+            </div>
+        </div>
+
+        <div id="process" class="page-section">
+            <img src="Parasol.section.title.process.webp" alt="Parasol Process" class="parasol">
+            <img src="Parasol.process.webp" alt="Parasol Process" class="parasol">
+        </div>
+
+        <div id="compare" class="page-section">
+            <img src="Parasol.section.title.compare.webp" alt="Compare Title" class="parasol">
+            <div class="comparison-section">
+                <img src="Parasol.comparison.header.webp" alt="Table Header" class="sticky-header">
+                <img src="Parasol.comparison.webp" alt="Comparison Data" class="parasol">
+            </div>
+        </div>
+
+        <div id="terms" class="page-section">
+            <img src="Parasol.section.title.terms.webp" alt="Warranty Title" class="parasol">
+            <img src="Parasol.warranty.webp" alt="Parasol Warranty" class="parasol">
+        </div>
+
+        <div id="contact" class="page-section" style="height: 300px;"></div>
+    </div>
+
+    <script>
+        // Use window.onload to ensure the DOM is fully ready
+        window.onload = function() {
+            updateCartLink();
+        };
+
+        function updateCartLink() {
+            const cartLink = document.getElementById('nav-cart-link');
+            if (!cartLink) return;
+
+            const saved = localStorage.getItem('parasol_cart');
+            if (saved) {
+                const cart = JSON.parse(saved);
+                if (cart.length > 0) {
+                    const cartString = cart.map(i => i.productId + ':' + i.priceId + ':' + i.quantity).join(',');
+                    cartLink.href = 'cart.html?data=' + encodeURIComponent(cartString);
+                    return;
+                }
+            }
+            cartLink.href = 'cart.html';
+        }
+
+        function addToCart(productId, priceId) {
+            console.log("Adding item:", productId);
+            
+            // 1. Get Qty
+            const input = document.getElementById('qty-' + productId);
+            const quantity = input ? parseInt(input.value) : 1;
+
+            // 2. Load Cart
+            let cart = [];
+            const saved = localStorage.getItem('parasol_cart');
+            if (saved) cart = JSON.parse(saved);
+
+            // 3. Update Cart
+            const existing = cart.find(i => i.productId === productId);
+            if (existing) {
+                existing.quantity += quantity;
+            } else {
+                cart.push({ productId: productId, priceId: priceId, quantity: quantity });
+            }
+
+            // 4. Save
+            localStorage.setItem('parasol_cart', JSON.stringify(cart));
+            
+            // 5. Update Link
+            updateCartLink();
+
+            // 6. Visual Feedback
+            alert(productId + " added to cart!");
+        }
+    </script>
+</body>
+</html>

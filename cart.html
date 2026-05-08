@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daniel Six | Checkout</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            background: #fcfdfd; 
+            font-family: sans-serif; 
+            display: flex; 
+            justify-content: center; 
+        }
+        .container { 
+            width: 100%; 
+            max-width: 500px; 
+            border: 1px solid #cfd8dc; 
+            padding: 30px; 
+            background: white; 
+            border-radius: 8px; 
+        }
+        h2 { 
+            color: #2e7d32; 
+            border-bottom: 2px solid #2e7d32; 
+            padding-bottom: 10px; 
+        }
+        .item { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #eee; 
+        }
+        .btn { 
+            width: 100%; 
+            padding: 18px; 
+            margin-top: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            font-size: 1.1rem; 
+        }
+        .btn-pay { 
+            background: #2e7d32; 
+            color: white; 
+            border: none; 
+        }
+        .btn-clear { 
+            background: white; 
+            border: 1px solid #ccc; 
+            color: #666; 
+            font-size: 0.95rem; 
+        }
+        .loading { opacity: 0.6; pointer-events: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Your Cart</h2>
+    <div id="cart-list">Loading...</div>
+    
+    <div id="actions" style="display:none;">
+        <button id="checkout-btn" class="btn btn-pay">Proceed to Checkout</button>
+        <button class="btn btn-clear" onclick="clearCart()">Clear Cart</button>
+    </div>
+</div>
+
+<script>
+    let cart = [];
+
+    window.onload = function() {
+        loadCart();
+        render();
+    };
+
+    function loadCart() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const data = urlParams.get('data');
+
+        if (data) {
+            // Coming from product page via URL
+            cart = data.split(',').map(s => {
+                const p = s.split(':');
+                return { 
+                    name: p[0].trim(), 
+                    priceId: p[1] || '', 
+                    qty: parseInt(p[2]) || 1 
+                };
+            });
+            // Save to localStorage for consistency
+            localStorage.setItem('parasol_cart', JSON.stringify(cart));
+        } else {
+            // Load from localStorage
+            const saved = localStorage.getItem('parasol_cart');
+            if (saved) {
+                cart = JSON.parse(saved).map(i => ({
+                    name: i.name || i.productId,
+                    priceId: i.priceId || '',
+                    qty: i.qty || i.quantity || 1
+                }));
+            }
+        }
+    }
+
+    function render() {
+        const list = document.getElementById('cart-list');
+        const actions = document.getElementById('actions');
+
+        if (cart.length === 0) {
+            list.innerHTML = "<p>Your cart is empty.</p>";
+            actions.style.display = "none";
+            return;
+        }
+
+        list.innerHTML = cart.map(item => `
+            <div class="item">
+                <span>${item.name}</span>
+                <span>Qty: ${item.qty}</span>
+            </div>
+        `).join('');
+
+        actions.style.display = "block";
+    }
+
+    // === SERVER-SIDE CHECKOUT ===
+    document.getElementById('checkout-btn').onclick = async function() {
+        const btn = this;
+        btn.textContent = "Redirecting to Stripe...";
+        btn.classList.add('loading');
+
+        try {
+            const response = await fetch('/create-checkout-session', {   // ← Change this URL if needed
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cart: cart })
+            });
+
+            const data = await response.json();
+
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                alert("Error: No checkout URL received.");
+                btn.textContent = "Proceed to Checkout";
+                btn.classList.remove('loading');
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Failed to connect to checkout. Please try again.");
+            btn.textContent = "Proceed to Checkout";
+            btn.classList.remove('loading');
+        }
+    };
+
+    function clearCart() {
+        if (confirm("Clear entire cart?")) {
+            localStorage.removeItem('parasol_cart');
+            window.location.href = 'cart.html';
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daniel Six | Checkout</title>
+    <style>
+        body { margin: 0; padding: 20px; background: #fcfdfd; font-family: sans-serif; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 500px; border: 1px solid #cfd8dc; padding: 30px; background: white; border-radius: 8px; }
+        h2 { color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; }
+        .item { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #eee; }
+        .btn { width: 100%; padding: 18px; margin-top: 15px; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 1.1rem; }
+        .btn-pay { background: #2e7d32; color: white; border: none; }
+        .btn-clear { background: white; border: 1px solid #ccc; color: #666; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Your Cart</h2>
+    <div id="cart-list">Loading...</div>
+    <div id="actions" style="display:none;">
+        <button id="checkout-btn" class="btn btn-pay">Proceed to Checkout</button>
+        <button class="btn btn-clear" onclick="clearCart()">Clear Cart</button>
+    </div>
+</div>
+<script>
+    const STRIPE_LINK = "https://buy.stripe.com/6oU5kC9qE4OKaay85A0Ny03";
+    
+    // Index order must match the order products appear in your Stripe Payment Link
+    const mapping = {
+        "Parasol-18": 0,
+        "Parasol-12": 1,
+        "Parasol-6":  2,
+        "Parasol-6L": 3,
+        "Parasol-3":  4
+    };
+
+    let cart = [];
+
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const data = urlParams.get('data');
+        
+        if (data) {
+            cart = data.split(',').map(s => {
+                const p = s.split(':');
+                return { name: p[0].trim(), qty: parseInt(p[2]) || 1 };
+            });
+            localStorage.setItem('parasol_cart', JSON.stringify(cart));
+        } else {
+            const saved = localStorage.getItem('parasol_cart');
+            if (saved) {
+                const raw = JSON.parse(saved);
+                // Handle both old and new save formats
+                cart = raw.map(i => ({
+                    name: i.name || i.productId,
+                    qty: i.qty || i.quantity || 1
+                }));
+            }
+        }
+        render();
+    };
+
+    function render() {
+        const list = document.getElementById('cart-list');
+        const actions = document.getElementById('actions');
+        if (cart.length === 0) {
+            list.innerHTML = "Cart is empty.";
+            actions.style.display = "none";
+            return;
+        }
+        list.innerHTML = cart.map(i =>
+            `<div class="item"><span>${i.name}</span><span>Qty: ${i.qty}</span></div>`
+        ).join('');
+        actions.style.display = "block";
+    }
+
+    function clearCart() {
+        localStorage.removeItem('parasol_cart');
+        window.location.href = 'cart.html';
+    }
+
+    document.getElementById('checkout-btn').onclick = function() {
+        const params = cart.map(item => {
+            const index = mapping[item.name];
+            if (index === undefined) return null;
+            return `line_items[${index}][quantity]=${item.qty}`;
+        }).filter(Boolean).join('&');
+        
+        window.location.href = STRIPE_LINK + "?" + params;
+    };
+</script>
+</body>
+</html>
