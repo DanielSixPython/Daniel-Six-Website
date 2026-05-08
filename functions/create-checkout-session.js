@@ -3,11 +3,27 @@ import Stripe from 'stripe';
 
 export async function onRequestPost({ request, env }) {
     try {
-        const { cart } = await request.json();
+        let cart;
+        try {
+            const body = await request.json();
+            cart = body.cart;
+        } catch (e) {
+            return new Response(JSON.stringify({ error: "Invalid JSON in request" }), { 
+                status: 400,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
 
         if (!cart || !Array.isArray(cart) || cart.length === 0) {
             return new Response(JSON.stringify({ error: "Cart is empty" }), { 
-                status: 400, 
+                status: 400,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        if (!env.STRIPE_SECRET_KEY) {
+            return new Response(JSON.stringify({ error: "Stripe key not configured on Cloudflare" }), { 
+                status: 500,
                 headers: { "Content-Type": "application/json" }
             });
         }
@@ -33,8 +49,10 @@ export async function onRequestPost({ request, env }) {
         });
 
     } catch (error) {
-        console.error("Stripe error:", error);
-        return new Response(JSON.stringify({ error: "Failed to create checkout" }), { 
+        console.error("Checkout error:", error);
+        return new Response(JSON.stringify({ 
+            error: error.message || "Internal server error" 
+        }), { 
             status: 500,
             headers: { "Content-Type": "application/json" }
         });
