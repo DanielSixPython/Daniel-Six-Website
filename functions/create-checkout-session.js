@@ -3,19 +3,11 @@ import Stripe from 'stripe';
 
 export async function onRequestPost({ request, env }) {
     try {
-        const body = await request.json();
-        const { cart } = body;
+        const { cart } = await request.json();
 
         if (!cart || !Array.isArray(cart) || cart.length === 0) {
             return new Response(JSON.stringify({ error: "Cart is empty" }), { 
-                status: 400,
-                headers: { "Content-Type": "application/json" }
-            });
-        }
-
-        if (!env.STRIPE_SECRET_KEY) {
-            return new Response(JSON.stringify({ error: "Stripe key not configured" }), { 
-                status: 500,
+                status: 400, 
                 headers: { "Content-Type": "application/json" }
             });
         }
@@ -41,10 +33,8 @@ export async function onRequestPost({ request, env }) {
         });
 
     } catch (error) {
-        console.error(error);
-        return new Response(JSON.stringify({ 
-            error: "Internal server error" 
-        }), { 
+        console.error("Stripe error:", error);
+        return new Response(JSON.stringify({ error: "Failed to create checkout" }), { 
             status: 500,
             headers: { "Content-Type": "application/json" }
         });
