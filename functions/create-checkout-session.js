@@ -2,9 +2,8 @@ import Stripe from 'stripe';
 
 export async function onRequestPost({ request, env }) {
     try {
-        // Ensure the secret key exists
         if (!env.STRIPE_SECRET_KEY) {
-            throw new Error("STRIPE_SECRET_KEY is not defined in environment variables.");
+            throw new Error("STRIPE_SECRET_KEY is not defined.");
         }
 
         const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
@@ -28,19 +27,23 @@ export async function onRequestPost({ request, env }) {
             line_items: cart.map(item => ({
                 price: item.priceId,
                 quantity: parseInt(item.qty) || 1,
+                // THIS BLOCK ENABLES QUANTITY CHANGES ON STRIPE:
+                adjustable_quantity: {
+                    enabled: true,
+                    minimum: 1,
+                    maximum: 99,
+                },
             })),
             mode: 'payment',
             success_url: `${new URL(request.url).origin}/success.html`,
             cancel_url: `${new URL(request.url).origin}/cart.html`,
         });
 
-        // CRITICAL FIX: You must return the session URL to the frontend
         return new Response(JSON.stringify({ url: session.url }), {
             headers: { "Content-Type": "application/json" }
         });
         
     } catch (error) {
-        // Return a JSON error instead of an HTML error
         return new Response(JSON.stringify({ error: error.message }), { 
             status: 500,
             headers: { "Content-Type": "application/json" }
